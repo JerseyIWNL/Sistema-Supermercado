@@ -1,0 +1,70 @@
+import sqlite3
+import tkinter as tk
+from tkinter import messagebox
+
+def cadastrar_produto():
+    nome = nome_entry.get()
+    preco = preco_entry.get()
+    quantidade = quantidade_entry.get()
+
+    if nome and preco and quantidade:
+        try:
+            preco = float(preco)
+            quantidade = int(quantidade)
+
+            conn = sqlite3.connect('supermercado.db')
+            cursor = conn.cursor()
+
+           
+            cursor.execute('SELECT nome FROM produtos WHERE nome=?', (nome,))
+            existing_product = cursor.fetchone()
+
+            if existing_product:
+                messagebox.showerror("Erro", "Este produto já está cadastrado.")
+            else:
+                cursor.execute('INSERT INTO produtos (nome, preco, quantidade) VALUES (?, ?, ?)', (nome, preco, quantidade))
+
+                conn.commit()
+                conn.close()
+
+                nome_entry.delete(0, tk.END)
+                preco_entry.delete(0, tk.END)
+                quantidade_entry.delete(0, tk.END)
+
+                messagebox.showinfo("Sucesso", "Produto cadastrado com sucesso!")
+        except ValueError:
+            messagebox.showerror("Erro", "Preço e quantidade devem ser números válidos.")
+    else:
+        messagebox.showerror("Erro", "Preencha todos os campos.")
+
+root = tk.Tk()
+root.title("Cadastro de Produtos")
+
+frame = tk.Frame(root)
+frame.pack(padx=20, pady=20)
+
+nome_label = tk.Label(frame, text="Nome do Produto:")
+nome_label.pack()
+
+nome_entry = tk.Entry(frame)
+nome_entry.pack()
+
+preco_label = tk.Label(frame, text="Preço:")
+preco_label.pack()
+
+preco_entry = tk.Entry(frame)
+preco_entry.pack()
+
+quantidade_label = tk.Label(frame, text="Quantidade:")
+quantidade_label.pack()
+
+quantidade_entry = tk.Entry(frame)
+quantidade_entry.pack()
+
+cadastrar_button = tk.Button(frame, text="Cadastrar Produto", command=cadastrar_produto)
+cadastrar_button.pack()
+
+sair_button = tk.Button(frame, text="Sair", command=root.quit)
+sair_button.pack()
+
+root.mainloop()
