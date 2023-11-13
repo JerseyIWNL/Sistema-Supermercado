@@ -1,0 +1,165 @@
+import tkinter as tk
+from tkinter import simpledialog, messagebox
+
+class SistemaMercadoGUI:
+
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Sistema de Mercado")
+        self.root.configure(bg='#13315c')  # Adiciona a cor de fundo
+        # Crie uma fonte personalizada
+        self.custom_font = ("Arial", 12)
+
+        self.banco_dados = {
+            'pizza': {'preco': 25.0, 'codigo_barra': '123456789'},
+            'frango': {'preco': 10.0, 'codigo_barra': '987654321'},
+            'queijo': {'preco': 12.30, 'codigo_barra': '567890123'},
+            'laranja': {'preco': 3.50, 'codigo_barra': '456789012'},
+            'banana': {'preco': 5.0, 'codigo_barra': '345678901'}
+        }
+
+        self.carrinho = {}
+        self.total = 0.0
+        self.num_itens_comprados = 0
+
+        self.create_widgets()
+
+    def create_widgets(self):
+        # Adicione um Label para exibir a imagem do carrinho de supermercado
+        self.cart_image_label = tk.Label(self.root, bg='white')
+        self.cart_image_label.grid(row=0, column=0, columnspan=3, padx=5, pady=5)
+
+        # Carregue a imagem do carrinho (substitua 'path/to/cart.png' pelo caminho real da sua imagem)
+        cart_image = tk.PhotoImage(file='C:\\Users\\Jersey\\Documents\\Sistema Supermercado\\GUI_sistema\\logo.adv.png')
+        self.cart_image_label.configure(image=cart_image, width=400, height=190)
+        self.cart_image_label.image = cart_image
+
+        # Labels e Entries
+        self.barcode_label = tk.Label(self.root, text='Código de Barras:', font=self.custom_font, bg='#13315c', fg='white')
+        self.barcode_entry = tk.Entry(self.root, width=22, font=self.custom_font, bd=2, relief=tk.GROOVE, fg='black')
+        self.selection_label = tk.Label(self.root, text='Nome do Produto:', font=self.custom_font, bg='#13315c', fg='white')
+        self.selection_entry = tk.Entry(self.root, width=22, font=self.custom_font, bd=2, relief=tk.GROOVE, fg='black')
+        self.quantity_label = tk.Label(self.root, text='Quantidade:', font=self.custom_font, bg='#13315c', fg='white')
+        self.quantity_entry = tk.Entry(self.root, width=22, font=self.custom_font, bd=2, relief=tk.GROOVE, fg='black')
+
+        self.cart_label = tk.Label(self.root, text='Resumo da Compra', font=self.custom_font, bg='#13315c', fg='white')
+        self.cart_text = tk.Text(self.root, height=10, width=40, font=self.custom_font, bd=2, relief=tk.GROOVE, wrap=tk.WORD, fg='black')
+
+        self.total_label = tk.Label(self.root, text=f'Total da compra R${self.total:.2f}', font=self.custom_font, bg='#13315c', fg='white')
+        self.num_items_label = tk.Label(self.root, text=f'Número de itens: {self.num_itens_comprados}', font=self.custom_font, bg='#13315c', fg='white')
+
+        self.add_to_cart_button = tk.Button(self.root, text='Adicionar ao Carrinho', command=self.add_to_cart, width=19, font=self.custom_font)
+        self.add_by_barcode_button = tk.Button(self.root, text='Código de Barras', command=self.add_by_barcode, width=19, font=self.custom_font)
+        self.payment_button = tk.Button(self.root, text='Realizar Pagamento', command=self.pagamento, font=self.custom_font)
+
+        # Posicionamento de Labels e Entries
+        self.barcode_label.grid(row=1, column=0, sticky='w', padx=5, pady=5)
+        self.barcode_entry.grid(row=2, column=0, sticky='w', padx=5, pady=5)
+        self.selection_label.grid(row=3, column=0, sticky='w', padx=5, pady=5)
+        self.selection_entry.grid(row=4, column=0, sticky='w', padx=5, pady=5)
+        self.quantity_label.grid(row=5, column=0, sticky='w', padx=5, pady=5)
+        self.quantity_entry.grid(row=6, column=0, sticky='w', padx=5, pady=5)
+
+        self.cart_label.grid(row=1, column=1, sticky='w', padx=5, pady=5)
+        self.cart_text.grid(row=2, column=1, rowspan=5, sticky='w', padx=5, pady=5)
+
+        self.total_label.grid(row=7, column=0, sticky='w', padx=5, pady=5)
+        self.num_items_label.grid(row=7, column=1, sticky='w', padx=5, pady=5)
+
+        self.add_to_cart_button.grid(row=8, column=0, sticky='w', padx=5, pady=5)
+        self.add_by_barcode_button.grid(row=9, column=0, sticky='w', padx=5, pady=5)
+        self.payment_button.grid(row=9, column=1, sticky='w', padx=5, pady=5)
+
+    def add_to_cart(self):
+        selecao = self.selection_entry.get().lower()
+        quantidade = int(self.quantity_entry.get())
+
+        if selecao in self.banco_dados and quantidade > 0:
+            if selecao in self.carrinho:
+                self.carrinho[selecao] += quantidade
+            else:
+                self.carrinho[selecao] = quantidade
+
+            self.selection_entry.delete(0, tk.END)
+            self.quantity_entry.delete(0, tk.END)
+
+            self.update_cart_display()
+
+    def add_by_barcode(self):
+        codigo_barra = self.barcode_entry.get()
+        quantidade = int(self.quantity_entry.get())
+
+        for produto, dados in self.banco_dados.items():
+            if dados['codigo_barra'] == codigo_barra:
+                if produto in self.carrinho:
+                    self.carrinho[produto] += quantidade
+                else:
+                    self.carrinho[produto] = quantidade
+
+                self.barcode_entry.delete(0, tk.END)
+                self.quantity_entry.delete(0, tk.END)
+
+                self.update_cart_display()
+                return
+
+        messagebox.showerror(
+            "Produto não encontrado",
+            "O produto com o código de barras especificado não foi encontrado."
+        )
+
+    def update_cart_display(self):
+        self.cart_text.delete(1.0, tk.END)
+        self.total = 0.0
+        for produto, quantidade in self.carrinho.items():
+            preco_unitario = self.banco_dados[produto]['preco']
+            preco_total = preco_unitario * quantidade
+            cart_item = f'{quantidade}x {produto.capitalize()} - R${preco_total:.2f}\n'
+            self.cart_text.insert(tk.END, cart_item)
+            self.total += preco_total
+
+        self.total_label.config(text=f'Total da compra R${self.total:.2f}')
+        self.num_items_label.config(
+            text=f'Número de itens: {sum(self.carrinho.values())}')
+
+    def pagamento(self):
+        valor_pago = simpledialog.askfloat(
+            "Pagamento", "Digite o valor recebido (ou 0 para cancelar a compra):")
+
+        if valor_pago == 0:
+            messagebox.showinfo("Compra Cancelada", "Compra cancelada")
+            return
+
+        troco = valor_pago - self.total
+
+        if troco < 0:
+            messagebox.showerror(
+                "Valor Insuficiente", f'Valor Insuficiente. Faltam: R${-troco:.2f}')
+        else:
+            if troco > 0:
+                messagebox.showinfo("Troco", f'Troco: R${troco:.2f}')
+
+            cpf_nota = messagebox.askquestion(
+                "CPF na Nota", "Deseja incluir CPF na nota?")
+            if cpf_nota == 'yes':
+                cpf = simpledialog.askstring("CPF", "Digite seu CPF:")
+                nota_fiscal = f'Nota Fiscal: Total da Compra - R${self.total:.2f} | CPF - {cpf}'
+            else:
+                nota_fiscal = f'Nota Fiscal: Total da Compra - R${self.total:.2f}'
+
+            messagebox.showinfo("Nota Fiscal", nota_fiscal)
+
+            self.banco_dados = {
+                'pizza': {'preco': 25.0, 'codigo_barra': '123456789'},
+                'frango': {'preco': 10.0, 'codigo_barra': '987654321'},
+                'queijo': {'preco': 12.30, 'codigo_barra': '567890123'},
+                'laranja': {'preco': 3.50, 'codigo_barra': '456789012'},
+                'banana': {'preco': 5.0, 'codigo_barra': '345678901'}
+            }
+            self.carrinho = {}
+            self.total = 0.0
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = SistemaMercadoGUI(root)
+    root.mainloop()
